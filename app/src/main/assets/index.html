@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#090909">
+<title>مواقيت القاهرة</title>
+<style>
+:root{--gold:#d7b45b;--gold2:#f3df9b;--bg:#080808;--panel:#141414;--muted:#a99a72}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% -15%,#302611 0%,#111 38%,#070707 78%);color:#f7f1df;font-family:"Noto Naskh Arabic","Tahoma",sans-serif;min-height:100vh}
+main{max-width:480px;margin:auto;padding:24px 18px 30px}
+header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #5e4a22;padding:4px 2px 16px}
+.brand{color:var(--gold2);font-size:20px;font-weight:800;letter-spacing:.3px}.city{border:1px solid #705a2c;border-radius:30px;padding:6px 13px;color:var(--gold2);font-size:13px}
+.clockbox{text-align:center;padding:26px 8px 20px}.eyebrow{color:var(--muted);font-size:14px}
+#clock{font-family:Tahoma,sans-serif;font-size:clamp(42px,12vw,58px);font-weight:700;color:var(--gold2);direction:ltr;letter-spacing:1px;margin:6px 0;text-shadow:0 0 24px #b68d3c35}
+#greg,#hijri{margin:7px 0;color:#d8c99e}#hijri{font-size:19px;color:var(--gold2);font-weight:700}
+.next{background:linear-gradient(145deg,#211b10,#111);border:1px solid #705727;border-radius:22px;text-align:center;padding:18px 14px;margin:8px 0 20px;box-shadow:0 12px 35px #0008}
+.next .label{color:var(--muted);font-size:13px}.nextname{font-size:25px;color:var(--gold2);font-weight:800;margin:5px 0}
+#countdown{font:700 32px Tahoma,sans-serif;color:#fff;direction:ltr;letter-spacing:1px}
+#nexttime{color:#c8b783;font-size:13px;margin-top:5px}
+.sectiontitle{color:var(--gold2);font-size:17px;font-weight:700;margin:18px 3px 10px}
+.prayers{background:#121212;border:1px solid #39301d;border-radius:18px;overflow:hidden}
+.prayer{display:flex;align-items:center;justify-content:space-between;padding:14px 17px;border-bottom:1px solid #29251c;font-size:16px}
+.prayer:last-child{border:0}.prayer .name{color:#e8d9ad}.prayer .time{font:600 17px Tahoma,sans-serif;direction:ltr;color:#fff}
+.prayer.active{background:linear-gradient(90deg,#3a2c12,#211b10);box-shadow:inset -3px 0 var(--gold)}
+.prayer.active .name,.prayer.active .time{color:var(--gold2)}
+footer{text-align:center;color:#857957;font-size:11px;margin-top:17px;line-height:1.8}
+#status{font-size:12px;color:#c7a85b;text-align:center;min-height:20px;margin-top:8px}
+</style>
+</head>
+<body><main>
+<header><div class="brand">✦ مواقيت القاهرة</div><div class="city">القاهرة · مصر</div></header>
+<section class="clockbox">
+<div class="eyebrow">الوقت الآن</div><div id="clock">--:--:--</div>
+<div id="greg">جارٍ تحميل التاريخ...</div><div id="hijri">--</div>
+</section>
+<section class="next">
+<div class="label">الصلاة القادمة</div><div class="nextname" id="nextname">--</div>
+<div id="countdown">--:--:--</div><div id="nexttime">يتم تحديث المواقيت</div>
+</section>
+<div class="sectiontitle">مواقيت الصلاة اليوم</div>
+<section class="prayers" id="prayers">
+<div class="prayer"><span class="name">الفجر</span><span class="time">--:--</span></div>
+<div class="prayer"><span class="name">الشروق</span><span class="time">--:--</span></div>
+<div class="prayer"><span class="name">الظهر</span><span class="time">--:--</span></div>
+<div class="prayer"><span class="name">العصر</span><span class="time">--:--</span></div>
+<div class="prayer"><span class="name">المغرب</span><span class="time">--:--</span></div>
+<div class="prayer"><span class="name">العشاء</span><span class="time">--:--</span></div>
+</section>
+<div id="status">جاري جلب مواقيت الصلاة لمدينة القاهرة...</div>
+<footer>حساب المواقيت: الهيئة المصرية العامة للمساحة · التوقيت المحلي للقاهرة<br>قد تختلف المواقيت دقائق بسيطة حسب اعتماد الجهة الرسمية.</footer>
+</main>
+<script>
+const names=[["الفجر","Fajr"],["الشروق","Sunrise"],["الظهر","Dhuhr"],["العصر","Asr"],["المغرب","Maghrib"],["العشاء","Isha"]];
+let times={}, nextAt=null, nextIndex=-1;
+const $=id=>document.getElementById(id);
+const fmtDate=d=>new Intl.DateTimeFormat('ar-EG',{weekday:'long',year:'numeric',month:'long',day:'numeric',timeZone:'Africa/Cairo'}).format(d);
+function hijri(d){return new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura',{day:'numeric',month:'long',year:'numeric',timeZone:'Africa/Cairo'}).format(d)+' هـ'}
+function tick(){
+ const now=new Date();
+ $('clock').textContent=new Intl.DateTimeFormat('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false,timeZone:'Africa/Cairo'}).format(now);
+ $('greg').textContent=fmtDate(now); $('hijri').textContent=hijri(now);
+ if(nextAt){let ms=Math.max(0,nextAt-now);let s=Math.floor(ms/1000),h=Math.floor(s/3600),m=Math.floor(s%3600/60),sec=s%60;
+ $('countdown').textContent=[h,m,sec].map(x=>String(x).padStart(2,'0')).join(':');}
+}
+function cleanTime(t){return String(t||'').replace(/\s*\([^)]*\)/g,'').trim()}
+function parseTime(t,base){let [h,m]=cleanTime(t).split(':').map(Number);let d=new Date(base);d.setHours(h,m,0,0);return d}
+function updateNext(){
+ const now=new Date();let upcoming=[];
+ names.forEach(([ar,key],i)=>{if(!times[key])return;let d=parseTime(times[key],now);if(d>now)upcoming.push({i,d,ar,key})});
+ if(upcoming.length){let n=upcoming[0];nextAt=n.d;nextIndex=n.i;$('nextname').textContent=n.ar;$('nexttime').textContent='موعد الصلاة '+cleanTime(times[n.key]);}
+ else {let tomorrow=new Date(now);tomorrow.setDate(tomorrow.getDate()+1);nextAt=parseTime(times.Fajr,tomorrow);nextIndex=0;$('nextname').textContent='الفجر';$('nexttime').textContent='صلاة الفجر القادمة غدًا · '+cleanTime(times.Fajr);}
+ document.querySelectorAll('.prayer').forEach((el,i)=>el.classList.toggle('active',i===nextIndex));
+}
+async function load(){
+ try{
+  const date=new Intl.DateTimeFormat('en-CA',{timeZone:'Africa/Cairo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date()).replaceAll('/','-');
+  const r=await fetch('https://api.aladhan.com/v1/timingsByCity/'+date+'?city=Cairo&country=Egypt&method=5');
+  if(!r.ok)throw Error('network');const j=await r.json();if(j.code!==200)throw Error('api');
+  const t=j.data.timings;times=t;
+  document.querySelectorAll('.prayer').forEach((el,i)=>{el.querySelector('.time').textContent=cleanTime(t[names[i][1]])});
+  updateNext();$('status').textContent='تم تحديث المواقيت · القاهرة';
+ }catch(e){$('status').textContent='تعذر الاتصال لجلب المواقيت. تحقق من الإنترنت ثم أعد فتح التطبيق.'}
+}
+tick();setInterval(()=>{tick();if(nextAt&&nextAt<=new Date())load()},1000);load();setInterval(load,6*60*60*1000);
+</script></body></html>
